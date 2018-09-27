@@ -10,7 +10,6 @@ void setup() {
 void loop() {
   int ledValue = LOW;
   
-  // put your main code here, to run repeatedly:
   int ctsValue = digitalRead(ctsPin);
   
   if (ctsValue == HIGH){
