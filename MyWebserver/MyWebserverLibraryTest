@@ -1,0 +1,42 @@
+#include <MyWebserver.h>
+
+String arr[5];
+MyWebserver myServer;
+
+void setup(){
+  Serial.begin(9600);
+
+  String adresses[5];
+  
+  const char* ssid = "ssid";
+  const char* pass = "pass";
+  
+  myServer.connectToWifi(ssid, pass);
+  myServer.begin();
+  
+}
+
+void loop(){
+  
+  myServer.handleClient();
+
+  //print the elements of the array if it changed
+  String arr_cp[5] = arr;
+  myServer.updateArray(arr);
+
+  //check if arr was changed
+  bool arrWasChanged = false;
+  for(int i = 0; i<sizeof(arr)/sizeof(String); i++){
+    if (arr[i] != arr_cp[i]){
+      arrWasChanged = true;
+      break;
+    }
+  }
+
+  //print the array if it was changed
+  if (arrWasChanged){
+    for(int i=0; i<sizeof(arr)/sizeof(String); i++) Serial.println(arr[i]);
+    Serial.println();
+  }
+  
+}
