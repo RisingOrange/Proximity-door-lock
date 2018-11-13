@@ -15,15 +15,19 @@ class MyWebserver{
 
   MyWebserver();
   
-  bool connectToWifi(const char* ssid, const char* pass);
+  void connectToWifi(const char* ssid, const char* pass);
 
-  bool begin();
+  void beginAP();
+
+  void setHttpAuthentication(bool state);
+
+  void begin();
   
   void handleClient();
 
   void updateArray(String (&arrRef) [5]);
 
-  String local_ip;
+  String own_ip;
 
   private:
   String theArray[5]; //this array is the thing that can be configured throught the webserver
@@ -31,6 +35,10 @@ class MyWebserver{
   ESP8266WebServer* server;
   String site_template;
   String site;
+
+  bool isHttpAuthenticationActive;
+
+  void requestAuthentication();
 
   void handleRootPath();
   void prepareSite();
