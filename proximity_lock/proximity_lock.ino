@@ -1,5 +1,3 @@
-//my bluetooth adress A086:C6:8F4506
-
 int RSSI_TRESHOLD = 190;
 
 #include <ESP_SoftwareSerial.h>
