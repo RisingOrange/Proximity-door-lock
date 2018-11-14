@@ -1,4 +1,4 @@
-I, Jakub Fidler changed the name of the lib and the src files from SoftwareSerial to ESP_SoftwareSerial
+I, Floating Orange changed the name of the lib and the src files from SoftwareSerial to ESP_SoftwareSerial
 # EspSoftwareSerial
 
 Implementation of the Arduino software serial library for the ESP8266
