@@ -62,7 +62,7 @@ void loop(){
 }
 
 void setupConfigurableness(){
-  //CONIFURATION STUFF
+
   myServer.startAP(); 
   myServer.begin();
 }
