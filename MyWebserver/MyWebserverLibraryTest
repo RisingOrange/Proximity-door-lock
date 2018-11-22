@@ -7,8 +7,6 @@ MyWebserver myServer;
 void setup(){
   Serial.begin(9600);
 
-  String arr[5];
-
   letConfigure();
 }
 
