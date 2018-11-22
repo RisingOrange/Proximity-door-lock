@@ -108,6 +108,7 @@ input {
 </div>
 
 <ul id="myUL">
+|LIST|
 </ul>
 
 <p><button type='button' onclick='submit()' >Submit </button></p>
@@ -169,13 +170,14 @@ function newElement() {
 /* send http get request to the given url */
 function httpGet(theUrl) { 
    var xmlHttp = new XMLHttpRequest(); 
-   xmlHttp.open( 'GET', theUrl, false ); /* false for synchronous request */
-   xmlHttp.send( null ); 
+   xmlHttp.open( 'GET', theUrl, true ); /* true for asynchronous request */
+   
+   xmlHttp.send(); 
 }
 
 /* send data from li elements to own server */
 function submit() { 
-   submitUrl = 'http://192.168.1.15/submit?adresses='; 
+   submitUrl = 'http://|IP|/submit?adresses='; 
    var myNodelist = document.getElementsByTagName('LI'); 
    
    var i = 0; for (i = 0; i < myNodelist.length; i++) { 

@@ -8,6 +8,8 @@
 #include "ESP8266WiFi.h"
 #include "ESP8266WebServer.h"
 
+#include "webpage.h"
+
 
 class MyWebserver{
   
@@ -17,7 +19,8 @@ class MyWebserver{
   
   void connectToWifi(const char* ssid, const char* pass);
 
-  void beginAP();
+  void startAP();
+  void quitAP();
 
   void setHttpAuthentication(bool state);
 
