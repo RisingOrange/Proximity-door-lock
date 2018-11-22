@@ -3,21 +3,37 @@
 String arr[5];
 MyWebserver myServer;
 
+
 void setup(){
   Serial.begin(9600);
 
-  String adresses[5];
-  
-  const char* ssid = "ssid";
-  const char* pass = "pass";
-  
-  myServer.connectToWifi(ssid, pass);
-  myServer.begin();
-  
+  String arr[5];
+
+  letConfigure();
 }
 
 void loop(){
   
+}
+
+void letConfigure(){
+  //let the user register devices per webserver and then quit the AP
+
+  //const char* ssid     = "WLAN.Tele2.net";
+  //const char* password = "8F3AAad2bcF5EDE3f56e33F74";
+  
+  //myServer.connectToWifi(ssid, password);
+  
+  myServer.startAP();
+  myServer.begin();
+  
+  while(!handleConfigurableness()) yield(); //let background processes do their thing
+  myServer.quitAP();
+}
+
+bool handleConfigurableness(){
+  //returns true if adress was changed in this call of the function
+   
   myServer.handleClient();
 
   //print the elements of the array if it changed
@@ -32,11 +48,15 @@ void loop(){
       break;
     }
   }
-
+  
   //print the array if it was changed
   if (arrWasChanged){
-    for(int i=0; i<sizeof(arr)/sizeof(String); i++) Serial.println(arr[i]);
+    for(int i=0; i<sizeof(arr)/sizeof(String); i++)
+      if(arr[i] != String("")) Serial.println(arr[i]);
+      else Serial.println(".");
     Serial.println();
+    return true;
   }
   
+  return false;
 }
