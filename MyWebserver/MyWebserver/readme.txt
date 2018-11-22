@@ -1,4 +1,7 @@
-You can use the html formmatter python script to turn a html file into an c++ header file 
-with a compatible multiline string containing the html saved to a macro(?) named "webpage".
+This is a description of the purpose of the html formatter python script
 
-The python script checks if the html file contains certain placeholder substrings that can be replaced by the MyWebserver lib.
+You can use the script to turn a html file into an c++ header file 
+with a compatible multiline string containing the html saved to a macro(?) named "webpage".
+This allows easier editing.
+
+The python script also checks if the html file contains certain placeholder substrings that the MyWebserver lib needs.
