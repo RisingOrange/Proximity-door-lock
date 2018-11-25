@@ -5,30 +5,32 @@
 #include <TimeLib.h>
 #include <MyWebserver.h>
 #include "rssi.h"
+#include "button.h"
+#include "configurationSaver.h"
 
-//software serial for communicating with the bluetooth module
+int buttonPin = 14; //D5
+int pin34Pin = 12; //D6
+int relayPin = 16; //D0
+
+//software serial for communicating with the bluetooth moduleeee
 SoftwareSerial BTserial(13, 15); // RX | TX
 
 //the array of adresses that can be configured and the server that allows it
 String adresses[5];
 MyWebserver myServer;
 
+ConfigurationSaver configurationSaver;
 
-int button = 14; //D5
-int pin34 = 12; //D6
-int relay = 16; //D0
-
+Button button(buttonPin);
 
 void setupBT(){
-  pinMode(button, INPUT);
-  pinMode(pin34, OUTPUT);
+  pinMode(pin34Pin, OUTPUT);
 
   //waiting 2 seconds before powering pin34 of the HC05 prevents it from entering the permanent AT mode
   //during which inquiring does not work
-  
-  digitalWrite(pin34, LOW);
+  digitalWrite(pin34Pin, LOW);
   delay(2000);
-  digitalWrite(pin34, HIGH);
+  digitalWrite(pin34Pin, HIGH);
   
   Serial.begin(9600);  
   Serial.println("Remember to select Both NL & CR in the serial monitor");
@@ -45,21 +47,21 @@ void setupConfigurableness(){
   myServer.begin();
 }
 
+bool handleConfigurableness(){
+  //returns true if adress was changed in this call of the function
 
-void handleConfigurableness(){
-   
   myServer.handleClient();
 
-  //print the elements of the adresses if it changed
-  String adresses_cp[sizeof(adresses)/sizeof(String)];
-  
-  for(int i=0; i<sizeof(adresses)/sizeof(String); i++){
+  //check if adresses were changed
+  int size = sizeof(adresses)/sizeof(String);
+  String adresses_cp[size];
+  for(int i = 0; i<size; i++){
     adresses_cp[i] = adresses[i];
   }
 
   myServer.updateArray(adresses);
 
-  //check if adresses was changed
+  
   bool adressesWereChanged = false;
   for(int i = 0; i<sizeof(adresses)/sizeof(String); i++){
     if (adresses[i] != adresses_cp[i]){
@@ -68,48 +70,68 @@ void handleConfigurableness(){
     }
   }
 
-  //print the adresses if it they were changed
+  //return true and print the adresses if they were changed
   if (adressesWereChanged){
     Serial.println("updated adresses: ");
     for(int i=0; i<sizeof(adresses)/sizeof(String); i++) Serial.println(adresses[i]);
     Serial.println();
     Serial.println();
+    return true;
   }
   
+  return false;
 }
 
+void letConfigure(){
+   //let the user register devices per webserver and then quit the AP if one is running
+  Serial.println("\nconfiguration mode started\n");
+  
+  setupConfigurableness();
+  while(!handleConfigurableness()) yield(); //let background processes do their thing
+  myServer.quitAP();
+
+  //save configuration data to let it survive power cycles
+  configurationSaver.save(adresses);
+  
+  Serial.println("\nconfiguration mode terminated\n");
+}
 
 void setup(){
   Serial.begin(9600);
 
-  setupConfigurableness();
-  setupBT();
-
-  pinMode(relay, OUTPUT);
-  digitalWrite(relay, LOW);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW);
   
+
+  setupBT();
+  
+  if(button.scan(5, 1)) letConfigure();
+  else configurationSaver.retrieve(adresses);
+
 }
 
 void loop(){
   
+  
   bool targetNear = false;
-  if(digitalRead(button) == HIGH){
+  if(button.isHigh()){
     targetNear = targetScan(5, BTserial, adresses);
   }
   
 
   //the compiler produced segfault errors when the Serial.print(ln) statement was inside the curly braces 
-  //following the if statement with button-input above
+  //following the if statement with button-input above, don't know why
   if(targetNear){
     Serial.println("target near");
     Serial.println("opening");
-    digitalWrite(relay, HIGH);
+    digitalWrite(relayPin, HIGH);
     delay(1000);
-    digitalWrite(relay, LOW);
+    digitalWrite(relayPin, LOW);
     Serial.println();
   }
   
   /*  
+  //code for communicating with the HC05 per AT-commands
   while (BTserial.available()){
    Serial.write(BTserial.read());
   }
@@ -119,7 +141,7 @@ void loop(){
     BTserial.write(Serial.read());
   }
   */
-  
-  handleConfigurableness();
+ 
 }
+
 
