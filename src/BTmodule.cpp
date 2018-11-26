@@ -1,13 +1,31 @@
-#include "rssi.h"
 
-int rssi_threshold = RSSI_TRESHOLD;
 
-bool targetScan(int duration, SoftwareSerial& BTserial, String adresses[5]){
+#include "BTmodule.h"
+
+BTmodule::BTmodule(int rx, int tx, int pin34, int rssi_threshold) : rxPin(rx), txPin(rx), pin34Pin(pin34) {
+
+  if ( (0 < rssi_threshold) && (rssi_threshold >= 255)) rssi_threshold = rssi_threshold;
+        else Serial.println("BTmodule: entered rssi-treshold in constructor is not valid, using default instead");
+        BTserial = new SoftwareSerial(rxPin, txPin);
+
+  //activates the AT mode of the HC05 bt-module
+  //ATTENTION: this only puts the module in the right mode, if pin34 was LOW at the beginning (for ~2 seconds) 
+  digitalWrite(pin34Pin, HIGH);
+
+  BTserial->begin(9600);  
+
+  BTserial->println("AT+CLASS=0");
+  BTserial->println("AT+INQM=1,9,3");
+
+}
+
+
+bool BTmodule::targetScan(int duration, String adresses[5]){
   /*blocks all other processes for its duration and listens for inq-data on BTserial, 
   if the device with the target adress has a high enough rssi --> return true, 
   if time runs out before this happens, return false*/
 
-  BTserial.println("AT+INQ");
+  BTserial->println("AT+INQ");
   
   int startTime = now();
   Serial.print("Scan initialized; uptime=");
@@ -23,8 +41,8 @@ bool targetScan(int duration, SoftwareSerial& BTserial, String adresses[5]){
     String IncomingString = "";
     bool StringReady = false;
   
-    while (BTserial.available()){
-      IncomingString=BTserial.readString();
+    while (BTserial->available()){
+      IncomingString=BTserial->readString();
       StringReady = true;
     }
 
@@ -34,11 +52,11 @@ bool targetScan(int duration, SoftwareSerial& BTserial, String adresses[5]){
     
       
       if(IncomingString.indexOf("+INQ") != -1){
-        int rssi = getNearestRssiValue(IncomingString, BTserial, adresses);
+        int rssi = getNearestRssiValue(IncomingString, adresses);
         Serial.print("rssi: ");
         Serial.println(rssi);
         if (rssi > rssi_threshold) {
-          BTserial.println("AT+INQC");
+          BTserial->println("AT+INQC");
           return true;
         }
       }
@@ -50,11 +68,11 @@ bool targetScan(int duration, SoftwareSerial& BTserial, String adresses[5]){
   }
   
   Serial.println("time ended");
-  BTserial.println("AT+INQC");
+  BTserial->println("AT+INQC");
   return false;
 }
 
-int getNearestRssiValue(String inqLines, SoftwareSerial& BTserial, String adresses[5]){
+int BTmodule::getNearestRssiValue(String inqLines, String adresses[5]){
   //parses multi-line blocks of inq data and returns the biggest, non-zero rssi value of a device of which the adress is in adresses
   
   const int MIN = -9999;
@@ -68,7 +86,7 @@ int getNearestRssiValue(String inqLines, SoftwareSerial& BTserial, String adress
     if(endPos == -1) endPos = inqLines.length();
     String curLine = inqLines.substring(pos, npos);
     //Serial.print(curLine);
-    int rssi = getRssi(curLine, BTserial, adresses);
+    int rssi = getRssi(curLine, adresses);
 
     if(rssi != 0 and rssi > result) result = rssi;
     
@@ -80,7 +98,7 @@ int getNearestRssiValue(String inqLines, SoftwareSerial& BTserial, String adress
   return result;
 }
 
-int getRssi(String line, SoftwareSerial& BTserial, String adresses[5]){
+int BTmodule::getRssi(String line, String adresses[5]){
   //parses line of inq data and returns 0 when adresses are not in adresses (the array), else the rssi
   //the rssi is between 0-255
   //an example of an line is: +INQ:[4 alpha-numeric chars]:[2 alpha-numeric chars]:[6 alpha-numeric chars],7A020C,FFC3
